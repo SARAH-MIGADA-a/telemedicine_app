@@ -6,6 +6,8 @@ import 'screens/video_consult_screen.dart';
 import 'screens/education_resources_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/home_screen.dart';
+import 'package:http/http.dart' as http;  // For making HTTP requests
+import 'dart:convert';  // For decoding JSON
 
 void main() {
   runApp(TelemedicineApp());

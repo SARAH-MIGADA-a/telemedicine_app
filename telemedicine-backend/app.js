@@ -13,6 +13,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Root Route to handle "Cannot GET /" error
+app.get('/', (req, res) => {
+  res.send('Welcome to the Telemedicine API');
+});
+
 // Routes
 app.use('/api/users', userRoutes);
 app.use('/api/appointments', appointmentRoutes);

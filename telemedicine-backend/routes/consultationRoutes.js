@@ -1,69 +1,58 @@
 const express = require('express');
 const Consultation = require('../models/consultation');
-const Appointment = require('../models/appointment');
 const router = express.Router();
 
-// Add consultation details (notes, prescriptions, diagnosis)
-router.post('/add/:appointmentId', async (req, res) => {
-  const { doctorNotes, prescriptions, diagnosis } = req.body;
-  const { appointmentId } = req.params;
-
-  // Check if the appointment exists
-  const appointment = await Appointment.findById(appointmentId);
-  if (!appointment) {
-    return res.status(404).json({ message: 'Appointment not found' });
+// Get all consultations
+router.get('/', async (req, res) => {
+  try {
+    const consultations = await Consultation.find().populate('patient');
+    res.status(200).json(consultations);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
+});
 
-  // Create new consultation entry
-  const newConsultation = new Consultation({
-    appointmentId,
-    doctorNotes,
-    prescriptions,
-    diagnosis,
+// Create a new consultation
+router.post('/', async (req, res) => {
+  const { patient, doctor, date, time, notes } = req.body;
+
+  const consultation = new Consultation({
+    patient,
+    doctor,
+    date,
+    time,
+    notes,
   });
 
   try {
-    // Save consultation data
-    await newConsultation.save();
-
-    // Update appointment status to 'completed'
-    appointment.status = 'completed';
-    await appointment.save();
-
-    res.status(201).json({ message: 'Consultation details added successfully' });
-  } catch (err) {
-    res.status(400).json({ message: err.message });
+    const savedConsultation = await consultation.save();
+    res.status(201).json(savedConsultation);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
   }
 });
 
-// Get consultation details for a specific appointment
-router.get('/:appointmentId', async (req, res) => {
-  const { appointmentId } = req.params;
-
+// Update a consultation
+router.put('/:id', async (req, res) => {
   try {
-    const consultation = await Consultation.findOne({ appointmentId }).populate('appointmentId');
-    if (!consultation) {
-      return res.status(404).json({ message: 'Consultation details not found' });
-    }
-
-    res.json(consultation);
-  } catch (err) {
-    res.status(400).json({ message: err.message });
+    const updatedConsultation = await Consultation.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+    res.status(200).json(updatedConsultation);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
   }
 });
 
-// Optional: Get all consultations for a patient or doctor (can be used to fetch all consultations by doctor or patient)
-router.get('/user/:userId', async (req, res) => {
-  const { userId } = req.params;
-
+// Delete a consultation
+router.delete('/:id', async (req, res) => {
   try {
-    const consultations = await Consultation.find({
-      'appointmentId.patientId': userId,
-    }).populate('appointmentId');
-
-    res.json(consultations);
-  } catch (err) {
-    res.status(400).json({ message: err.message });
+    await Consultation.findByIdAndDelete(req.params.id);
+    res.status(200).json({ message: 'Consultation deleted' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 });
 
